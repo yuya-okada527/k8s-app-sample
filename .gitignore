@@ -27,3 +27,6 @@ batch-app/.settings/
 batch-app/target/
 batch-app/.project
 batch-app/.classpath
+
+# OSファイル
+.DS_Store

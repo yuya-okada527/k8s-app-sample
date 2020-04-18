@@ -1,0 +1,147 @@
+# MovieRecommenderのネットワーク構成を構築するテンプレート
+AWSTemplateFormatVersion: "2010-09-09"
+
+# CloudFormationに対する変数(引数)を定義する
+#
+# Parametes配下に記述した変数をテンプレート内で参照できる
+# マネージメントコンソールからCloudFormationを使って、リソースを作成するとき、
+# 引数として、値を渡すことができる
+Parameters:
+  # EKSクラスタの名前
+  ClusterBaseName: # 変数名
+    Type: String # 変数には、型を定義できる
+    Default: movie-recommender # デフォルト値、引数を渡さない場合この値になる
+
+  # リージョン(データセンターが位置する地域)
+  TargetRegion:
+    Type: String
+    Default: ap-northeast-1
+
+  # アベイラビリティーゾーン1(個々のデータセンター)
+  AvailabilityZone1:
+    Type: String
+    Default: ap-northeast-1a
+
+  # アベイラビリティーゾーン2
+  AvailabilityZone2: # EKSでは、必ず2つ以上のAZを設定する必要がある
+    Type: String
+    Default: ap-northeast-1c
+
+  # VPCのCIDRブロック
+  VpcBlock:
+    Type: String
+    Default:
+      192.168.0.0/16 # 約2^^(32-16)個のIPアドレスが使える
+      # (192.168までの16bitは固定ってこと)
+
+  # VPC内のサブネット1(VPC内のアドレス空間)
+  WorkerSubnet1Block:
+    Type: String
+    Default:
+      192.168.0.0/24 # 約2^^(32-24)個のIPアドレスが使える
+      #
+
+  # サブネット2
+  WorkerSubnet2Block: # AZが2つということは、当然サブネットも2つ
+    Type: String
+    Default: 192.168.1.0/24
+
+# CloudFormationで構築するリソースを定義する
+# リソースのリファレンス
+# https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-resource-codebuild-project.html
+Resources:
+  # EKSのワーカーノードのVPC
+  EksWorkVPC: # リソース名
+    Type: AWS::EC2::VPC # AWSリソースのタイプを指定できる
+    # Properties以下で、リソースのオプションを定義する
+    # それぞれが、何を示しているのかは、マネージメントコンソールで、
+    # リソースを作成する際のオプションを確認するのが一番わかりやすい
+    Properties:
+      CidrBlock: !Ref VpcBlock # !Refは、組み込みの関数で、変数を評価する
+      # 組み込み関数のリファレンス
+      # https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-sub.html
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ClusterBaseName}-VPC
+
+  # ワーカーノードのサブネット1
+  WorkerSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Ref AvailabilityZone1
+      CidrBlock: !Ref WorkerSubnet1Block
+      VpcId: !Ref EksWorkVPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${ClusterBaseName}-WorkerSubnet1
+
+  # ワーカーノードのサブネット2
+  WorkerSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Ref AvailabilityZone2
+      CidrBlock: !Ref WorkerSubnet2Block
+      VpcId: !Ref EksWorkVPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${ClusterBaseName}-WorkerSubnet2
+
+  # インターネットゲートウェイ
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  # インターネットゲートウェイとVPCの関連付け
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref EksWorkVPC
+
+  # ルートテーブル
+  WorkerSubnetRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref EksWorkVPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${ClusterBaseName}-WorkerSubnetRouteTable
+
+  # サブネットのルート(サブネットの通信先を定義)
+  WorkerSubnetRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref WorkerSubnetRouteTable
+      DestinationCidrBlock: 0.0.0.0/0 # 任意のIPアドレス
+      GatewayId: !Ref InternetGateway # インターネットゲートウェイ
+
+  # サブネット1にルートテーブルを関連付ける
+  WorkerSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref WorkerSubnet1
+      RouteTableId: !Ref WorkerSubnetRouteTable
+
+  # サブネット2にルートテーブルを関連付ける
+  WorkerSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref WorkerSubnet2
+      RouteTableId: !Ref WorkerSubnetRouteTable
+
+# CloudFormationで作成したリソースの情報などを出力する
+Outputs:
+  # VPCの情報を出力
+  VPC:
+    Value: !Ref EksWorkVPC
+
+  # ワーカーノードのサブネットをカンマ区切りで出力
+  WorkerSubnets:
+    Value: !Join
+      - ","
+      - [!Ref WorkerSubnet1, !Ref WorkerSubnet2]
+
+  # ルートテーブルを出力
+  RouteTable:
+    Value: !Ref WorkerSubnetRouteTable

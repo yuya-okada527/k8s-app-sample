@@ -7,7 +7,10 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import com.example.k8s.sample.app.batch.SampleBatch;
 
+import lombok.RequiredArgsConstructor;
+
 @SpringBootApplication
+@RequiredArgsConstructor
 public class BatchApplication {
     
     /**
@@ -37,8 +40,7 @@ public class BatchApplication {
 
     public static void main(String[] args) throws Exception {
         try (ConfigurableApplicationContext context = SpringApplication.run(BatchApplication.class, args)) {
-            
-            // Batchを起動する
+            // ここらへんは後回し
             context.getBean(SampleBatch.class).execute();
         }
     }
