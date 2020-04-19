@@ -31,5 +31,8 @@ batch-app/.classpath
 # vscode
 .vscode/
 
+# idea
+api/.idea/
+
 # OSファイル
 .DS_Store
