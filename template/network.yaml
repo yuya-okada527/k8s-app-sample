@@ -134,6 +134,8 @@ Resources:
     Properties:
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref EksWorkVPC
+      RouteTableIds:
+        - !Ref WorkerSubnetRoute
 
 # CloudFormationで作成したリソースの情報などを出力する
 Outputs:
