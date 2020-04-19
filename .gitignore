@@ -28,5 +28,8 @@ batch-app/target/
 batch-app/.project
 batch-app/.classpath
 
+# vscode
+.vscode/
+
 # OSファイル
 .DS_Store

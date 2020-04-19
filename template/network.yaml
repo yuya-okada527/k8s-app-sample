@@ -37,9 +37,7 @@ Parameters:
   # VPC内のサブネット1(VPC内のアドレス空間)
   WorkerSubnet1Block:
     Type: String
-    Default:
-      192.168.0.0/24 # 約2^^(32-24)個のIPアドレスが使える
-      #
+    Default: 192.168.0.0/24 # 約2^^(32-24)個のIPアドレスが使える
 
   # サブネット2
   WorkerSubnet2Block: # AZが2つということは、当然サブネットも2つ

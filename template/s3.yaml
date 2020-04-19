@@ -50,3 +50,9 @@ Resources:
                   - !Ref AccessIpAddress
               StringEquals:
                 aws:sourceVpc: !Ref AccessVpcId
+
+Outputs:
+  BatchBucketName:
+    Value: !Join
+      - "-"
+      - [!Ref BucketBaseName, !Ref BucketSuffix]

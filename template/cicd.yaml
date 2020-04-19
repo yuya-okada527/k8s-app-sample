@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  # 実行対象のリージョン
+  Region:
+    Type: String
+    Default: "ap-northeast-1"
+    Description: Which region do you want to exeute pipeline.
+
+  # CICD体験用に使うCode Commitリポジトリ
+  CodeCommitRepositoryName:
+    Type: String
+    Default: "eks-work-cicd-repo"
+    Description: Code commit repo name used in this pipeline's source.
+  # トリガー対象のブランチ名
+  Branch:
+    Type: String
+    Description: CodeCommit branch name to execte pipeline.
+    Default: master
+
+Resources:
+  # Code Commit for SampleAP.
+  CodeCommitRepository:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryDescription: String
+      RepositoryName: !Ref CodeCommitRepositoryName
+
+Outputs:
+  YourCodeCommitRepositoryUrl:
+    Value: !GetAtt CodeCommitRepository.CloneUrlHttp
+    Description: Set this string to your Git Settings.
