@@ -12,11 +12,6 @@ Parameters:
     Type: String
     Default: "eks-work-cicd-repo"
     Description: Code commit repo name used in this pipeline's source.
-  # トリガー対象のブランチ名
-  Branch:
-    Type: String
-    Description: CodeCommit branch name to execte pipeline.
-    Default: master
 
 Resources:
   # Code Commit for SampleAP.

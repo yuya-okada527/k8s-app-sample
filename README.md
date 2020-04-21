@@ -24,7 +24,7 @@ $ aws cloudformation create-stack \
 --stack-name k8s-sample-app-s3 \
 --region ap-northeast-1 \
 --template-body file://./template/s3.yaml \
---parameters ParameterKey=AccessVpcId,ParameterValue={構築した VPC} \
+--parameters ParameterKey=VpcEndPoint,ParameterValue={VPCエンドポイント} \
  ParameterKey=AccessIpAddress,ParameterValue={IP アドレス} \
  ParameterKey=BucketSuffix,ParameterValue={バケット接尾辞}
 ```
@@ -67,16 +67,9 @@ $ kubectl config set-context k8s-sample-app \
 $ cd batch-app
 $ mvn clean package
 
-# S3バケットの確認
-$ aws cloudformation describe-stacks \
---output json \
---stack-name k8s-sample-app-s3 | \
-jq '.Stacks[].Outputs'
-
 # バッチアプリコンテナイメージの作成
 $ docker build -t k8s-sample/batch-app:1.0.0 \
 --build-arg JAR_FILE=target/{JAR_FILE名} \
---build-arg S3_BUCKET={バケット名} \
 .
 
 # コンテナイメージのタグ付け
@@ -93,6 +86,17 @@ $ docker push {ECRホスト}/k8s-sample/batch-app:1.0.0
 ### 4. アプリケーションのデプロイ
 
 ```bash
+# S3バケットの確認
+$ aws cloudformation describe-stacks \
+--output json \
+--stack-name k8s-sample-app-s3 | \
+jq '.Stacks[].Outputs'
+
+# ConfigMapの追加
+$ BUCKET_NAME={バケット名} \
+envsubst < manifest/config_map.yaml | \
+kubectl apply -f -
+
 # CronJobの追加
 $ ECR_HOST={ECRホスト} \
 envsubst < manifest/cron_job.yaml | \
@@ -130,4 +134,6 @@ $ aws s3 rm s3://{バケット名} --recursive
 
 # AWSリソースの削除
 
+# Kubernetesの削除
+$ eksctl delete cluster --name k8s-sample-app
 ```

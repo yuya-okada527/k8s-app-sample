@@ -15,7 +15,7 @@ Parameters:
   AccessIpAddress:
     Type: String
 
-  AccessVpcId:
+  VpcEndPoint:
     Type: String
 
 Resources:
@@ -49,7 +49,7 @@ Resources:
                 aws:SourceIp:
                   - !Ref AccessIpAddress
               StringEquals:
-                aws:sourceVpc: !Ref AccessVpcId
+                aws:sourceVpc: !Ref VpcEndPoint
 
 Outputs:
   BatchBucketName:

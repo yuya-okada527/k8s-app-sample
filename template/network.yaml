@@ -135,13 +135,17 @@ Resources:
       ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref EksWorkVPC
       RouteTableIds:
-        - !Ref WorkerSubnetRoute
+        - !Ref WorkerSubnetRouteTable
 
 # CloudFormationで作成したリソースの情報などを出力する
 Outputs:
   # VPCの情報を出力
   VPC:
     Value: !Ref EksWorkVPC
+
+  # VPCエンドポイントを出力
+  EndPoint:
+    Value: !Ref VpcEndPoint
 
   # ワーカーノードのサブネットをカンマ区切りで出力
   WorkerSubnets:

@@ -36,3 +36,6 @@ api/.idea/
 
 # OSファイル
 .DS_Store
+
+# キャッシュファイル
+api/app/__pycache__/
