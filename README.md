@@ -40,7 +40,7 @@ jq '.Stacks[].Outputs'
 
 # EKSクラスタの構築
 $ eksctl create cluster \
---vpc-public-subnets {ワーカーサブネット} \
+--vpc-public-subnets subnet-01bfa88196b817108,subnet-082f2d1dfdff4e32f \
 --name k8s-sample-app \
 --region ap-northeast-1 \
 --version 1.14 \
@@ -85,6 +85,8 @@ $ docker push {ECRホスト}/k8s-sample/batch-app:1.0.0
 
 ### 4. アプリケーションのデプロイ
 
+##### 4.1 バッチアプリのデプロイ手順
+
 ```bash
 # S3バケットの確認
 $ aws cloudformation describe-stacks \
@@ -101,6 +103,27 @@ kubectl apply -f -
 $ ECR_HOST={ECRホスト} \
 envsubst < manifest/cron_job.yaml | \
 kubectl apply -f -
+```
+
+##### 4.2 API のデプロイ手順
+
+```bash
+# コンテナのビルド
+$ docker build -t k8s-sample/api api
+
+# コンテナのタグ付け
+$ docker tag k8s-sample/api 935326844264.dkr.ecr.ap-northeast-1.amazonaws.com/k8s-sample/api
+
+# ECRへプッシュ
+$ aws ecr get-login --no-include-email | sh
+$ docker push 935326844264.dkr.ecr.ap-northeast-1.amazonaws.com/k8s-sample/api
+
+# Deploymentの適用
+$ kubectl apply -f manifest/deployment.yaml
+
+# Serviceの適用
+$ kubectl apply -f manifest/service.yaml
+
 ```
 
 ## リソースの削除手順
